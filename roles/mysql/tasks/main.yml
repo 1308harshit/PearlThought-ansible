@@ -1,0 +1,17 @@
+- name: Ensure MySQL is running and enabled
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Set MySQL root password
+  mysql_user:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    user: root
+    password: "{{ mysql_root_password }}"
+    host_all: yes
+    check_implicit_admin: true
+    priv: "*.*:ALL,GRANT"
+    state: present
+  # no_log: true

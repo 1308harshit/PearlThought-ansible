@@ -1,0 +1,20 @@
+# ---
+# - name: Setup EC2 with MySQL, PostgreSQL, and Nginx
+#   hosts: all
+#   become: true
+#   vars_files:
+#     - vars/vault.yml
+#   roles:
+#     - mysql
+#     - postgres
+#     - nginx
+
+---
+- name: Install MySQL and Deploy Hello World Flask App with Docker Swarm
+  hosts: all
+  become: yes
+  vars_files:
+    - vars/vault.yml
+  roles:
+    - mysql
+    - docker-swarm

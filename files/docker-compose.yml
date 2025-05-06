@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  app:
+    image: flask-app:latest
+    build:
+      context: /home/ubuntu/app
+    environment:
+      DB_HOST: "172.31.21.97"  
+      DB_NAME: "helloWorldDb"
+      DB_USER: "root"
+      DB_PASS: "MySQL@123"
+    ports:
+      - "5000:5000"
+    networks:
+      - default
+
+networks:
+  default:
+    driver: overlay

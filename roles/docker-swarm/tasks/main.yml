@@ -1,0 +1,95 @@
+# ---
+# - name: Install Docker dependencies
+#   apt:
+#     name: [apt-transport-https, ca-certificates, curl, software-properties-common]
+#     state: present
+#     update_cache: yes
+
+# - name: Add Docker GPG key
+#   apt_key:
+#     url: https://download.docker.com/linux/ubuntu/gpg
+#     state: present
+
+# - name: Add Docker repository
+#   apt_repository:
+#     repo: deb https://download.docker.com/linux/ubuntu focal stable
+#     state: present
+
+# - name: Install Docker engine and compose
+#   apt:
+#     name: [docker-ce, docker-ce-cli, containerd.io, docker-compose-plugin]
+#     state: present
+#     update_cache: yes
+
+# - name: Enable and start Docker service
+#   systemd:
+#     name: docker
+#     enabled: yes
+#     state: started
+
+# - name: Initialize Docker Swarm (ignore if already initialized)
+#   shell: docker swarm init || true
+
+# - name: Copy docker-compose file to instance
+#   copy:
+#     src: files/docker-compose.yml
+#     dest: /home/ubuntu/docker-compose.yml
+#     mode: '0644'
+
+# - name: Copy Flask app files to instance
+#   copy:
+#     src: files/app/
+#     dest: /home/ubuntu/app/
+#     mode: '0755'
+
+# - name: Deploy Docker stack
+#   shell: docker stack deploy -c /home/ubuntu/docker-compose.yml helloworld
+
+
+# --------------------------------------------------------------------------------------
+
+---
+- name: Add Docker repository
+  apt_repository:
+    repo: deb https://download.docker.com/linux/ubuntu focal stable
+    state: present
+
+- name: Enable and start Docker service
+  systemd:
+    name: docker
+    enabled: yes
+    state: started
+
+- name: Create .env file for Docker Compose
+  copy:
+    content: |
+      DB_NAME={{ db_name }}
+      MYSQL_ROOT_PASSWORD={{ mysql_root_password }}
+    dest: /home/ubuntu/.env
+    mode: '0644'
+
+- name: Copy docker-compose file to instance
+  copy:
+    src: files/docker-compose.yml
+    dest: /home/ubuntu/docker-compose.yml
+    mode: '0644'
+
+- name: Copy Flask app files to instance
+  copy:
+    src: files/app/
+    dest: /home/ubuntu/app/
+    mode: '0755'
+    owner: ubuntu
+    group: ubuntu
+
+- name: Build Flask app image
+  command: docker build -t flask-app:latest .
+  args:
+    chdir: /home/ubuntu/app
+  register: build_result
+  failed_when: build_result.rc != 0
+  changed_when: build_result.rc == 0
+
+- name: Deploy Docker stack
+  shell: docker stack deploy -c /home/ubuntu/docker-compose.yml helloworld --detach=true
+  when: build_result.rc == 0

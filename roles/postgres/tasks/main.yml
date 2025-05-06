@@ -1,0 +1,35 @@
+- name: Install required packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - postgresql
+    - python3-psycopg2
+
+- name: Ensure PostgreSQL is running and enabled
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Ensure PostgreSQL user is created
+  postgresql_user:
+    name: myuser
+    password: "{{ postgres_user_password }}"
+    role_attr_flags: LOGIN
+  become: yes
+  become_method: sudo
+  become_user: postgres
+  environment:
+    TMPDIR: /home/harshit/ansible_tmp
+  no_log: true
+
+- name: Ensure PostgreSQL database is created
+  postgresql_db:
+    name: mydb
+    owner: myuser
+  become: yes
+  become_method: sudo
+  become_user: postgres
+  environment:
+    TMPDIR: /home/harshit/ansible_tmp
